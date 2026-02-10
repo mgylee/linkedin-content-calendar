@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gorgias LinkedIn Content Calendar</title>
+  <style>
+    :root {
+      --gorgias: #6E44FF;
+      --gorgias-dark: #5835CC;
+      --gorgias-bg: #F7F5FF;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 40px 24px;
+    }
+
+    .container { max-width: 1320px; margin: 0 auto; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+
+    .filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+
+    .filter-btn {
+      padding: 6px 14px;
+      border: 1px solid #d0d0d0;
+      border-radius: 20px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: #1a1a1a; }
+    .filter-btn.active { background: var(--gorgias); color: #fff; border-color: var(--gorgias); }
+    .filter-btn.active[data-filter="thought_leadership"] { background: #4350d0; border-color: #4350d0; }
+    .filter-btn.active[data-filter="product"] { background: #b37400; border-color: #b37400; }
+    .filter-btn.active[data-filter="engagement"] { background: #2d7a2d; border-color: #2d7a2d; }
+
+    .calendar { display: grid; gap: 20px; }
+
+    .entry { background: #fff; border-radius: 10px; border: 1px solid #e5e5e5; overflow: hidden; }
+
+    .entry-header {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 100px 1fr 200px;
+      gap: 20px;
+      align-items: start;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .entry-header:hover { background: #fafafa; }
+
+    .card-date { text-align: center; }
+    .card-date .month { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
+    .card-date .day { font-size: 32px; font-weight: 700; line-height: 1.1; }
+    .card-date .weekday { font-size: 12px; color: #999; }
+
+    .card-body { min-width: 0; }
+    .card-body .topic { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .card-body .hook { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 12px; }
+
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 500; }
+    .tag-type { background: #eef0ff; color: #4350d0; }
+    .tag-product { background: #fef3e0; color: #b37400; }
+    .tag-engagement { background: #e8f8e8; color: #2d7a2d; }
+    .tag-cta { background: #f0f0f0; color: #555; }
+
+    .card-meta { font-size: 13px; color: #666; line-height: 1.6; }
+    .card-meta .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #999; font-weight: 600; }
+
+    .expand-hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .expand-hint .arrow { transition: transform 0.2s; display: inline-block; }
+    .entry.open .expand-hint .arrow { transform: rotate(90deg); }
+
+    /* Drafts panel */
+    .drafts-panel {
+      display: none;
+      border-top: 1px solid #e5e5e5;
+      background: #fafafa;
+    }
+    .entry.open .drafts-panel { display: block; }
+
+    /* Controls bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 16px 24px;
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      flex-wrap: wrap;
+    }
+
+    .control-group { display: flex; align-items: center; gap: 8px; }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #999;
+    }
+
+    .persona-select {
+      padding: 6px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      min-width: 200px;
+    }
+    .persona-select:focus { outline: none; border-color: var(--gorgias); }
+
+    .tone-tabs { display: flex; gap: 0; }
+
+    .tone-tab {
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      color: #888;
+      transition: all 0.15s;
+    }
+    .tone-tab:first-child { border-radius: 6px 0 0 6px; }
+    .tone-tab:last-child { border-radius: 0 6px 6px 0; }
+    .tone-tab:not(:first-child) { border-left: none; }
+    .tone-tab:hover { color: #1a1a1a; }
+    .tone-tab.active { background: var(--gorgias); color: #fff; border-color: var(--gorgias); }
+    .tone-tab.active + .tone-tab { border-left-color: var(--gorgias); }
+
+    /* Persona guidance */
+    .persona-guidance {
+      padding: 12px 24px;
+      background: var(--gorgias-bg);
+      border-bottom: 1px solid #e5e5e5;
+      font-size: 13px;
+      color: var(--gorgias);
+      line-height: 1.5;
+      display: none;
+    }
+    .persona-guidance.visible { display: block; }
+    .persona-guidance .pg-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-right: 8px;
+    }
+
+    /* Draft content */
+    .draft-content { display: none; padding: 28px 32px; }
+    .draft-content.active { display: block; }
+
+    .draft-post {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 24px 28px;
+      font-size: 14px;
+      line-height: 1.85;
+      white-space: pre-line;
+      max-width: 680px;
+      position: relative;
+    }
+    .draft-post .post-text { color: #333; }
+
+    .draft-comment {
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: #f0f4ff;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 680px;
+    }
+    .draft-comment .comment-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #4350d0;
+      margin-bottom: 4px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 5px 12px;
+      font-size: 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+    .copy-btn.copied { background: var(--gorgias); color: #fff; border-color: var(--gorgias); }
+
+    /* Regen command */
+    .regen-cmd {
+      margin-top: 16px;
+      max-width: 680px;
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      color: #a0e8a0;
+      line-height: 1.5;
+      position: relative;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .regen-cmd .cmd-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .regen-cmd .copy-cmd-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 3px 10px;
+      font-size: 11px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.15s;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .regen-cmd .copy-cmd-btn:hover { color: #fff; border-color: #fff; }
+    .regen-cmd .copy-cmd-btn.copied { color: #a0e8a0; border-color: #a0e8a0; }
+
+    /* Month calendar */
+    .month-cal {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e5e5e5;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .month-cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .month-cal-title { font-size: 16px; font-weight: 700; }
+    .month-cal-nav { display: flex; gap: 6px; }
+    .month-cal-nav button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .month-cal-nav button:hover { border-color: #1a1a1a; }
+    .month-cal-legend { display: flex; gap: 16px; margin-bottom: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .month-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .day-header {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      padding: 8px 0;
+    }
+    .day-cell {
+      text-align: center;
+      padding: 10px 4px 8px;
+      border-radius: 8px;
+      min-height: 52px;
+      cursor: default;
+      transition: background 0.1s;
+    }
+    .day-cell .day-num { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+    .day-cell.empty .day-num { color: transparent; }
+    .day-cell.today .day-num {
+      background: var(--gorgias);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .day-cell.has-post { cursor: pointer; }
+    .day-cell.has-post:hover { background: #f0f0f0; }
+    .day-dots { display: flex; gap: 4px; justify-content: center; margin-top: 6px; min-height: 8px; }
+    .day-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-thought { background: #4350d0; }
+    .dot-product { background: #b37400; }
+    .dot-engagement { background: #2d7a2d; }
+
+    /* Date input */
+    .date-input {
+      padding: 6px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .date-input:focus { outline: none; border-color: var(--gorgias); }
+
+    /* Time recommendation */
+    .time-rec {
+      padding: 12px 24px;
+      background: #f0faf0;
+      border-bottom: 1px solid #e5e5e5;
+      font-size: 13px;
+      color: #2d7a2d;
+      line-height: 1.5;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .time-rec .tr-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    .time-rec.misaligned {
+      background: #fffaf0;
+      color: #b37400;
+    }
+
+    /* Page header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      background: var(--gorgias);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .action-btn {
+      padding: 8px 16px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #1a1a1a;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { border-color: var(--gorgias); color: var(--gorgias); }
+    .action-btn.copied { background: var(--gorgias); color: #fff; border-color: var(--gorgias); }
+
+    /* LinkedIn post preview */
+    .linkedin-preview {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      max-width: 680px;
+      overflow: hidden;
+      position: relative;
+    }
+    .linkedin-preview .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1;
+    }
+    .linkedin-header {
+      display: flex;
+      gap: 10px;
+      padding: 16px 16px 0;
+      align-items: center;
+    }
+    .linkedin-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gorgias);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .linkedin-author-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      line-height: 1.3;
+    }
+    .linkedin-author-meta {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+    .linkedin-body {
+      padding: 12px 16px 16px;
+      font-size: 14px;
+      line-height: 1.85;
+      white-space: pre-line;
+      color: #333;
+    }
+    .linkedin-reactions {
+      padding: 0 16px 8px;
+      font-size: 12px;
+      color: #666;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .linkedin-actions {
+      display: flex;
+      padding: 4px 0;
+    }
+    .linkedin-action {
+      flex: 1;
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      border-radius: 4px;
+    }
+
+    /* LinkedIn comment preview */
+    .linkedin-comment-wrap {
+      margin-top: 12px;
+      max-width: 680px;
+      display: flex;
+      gap: 8px;
+    }
+    .linkedin-comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gorgias);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .linkedin-comment-bubble {
+      background: #f2f2f2;
+      border-radius: 0 8px 8px 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      flex: 1;
+    }
+    .linkedin-comment-name {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .linkedin-comment-meta {
+      font-weight: 400;
+      color: #666;
+      font-size: 11px;
+    }
+
+    @media (max-width: 900px) {
+      .entry-header { grid-template-columns: 1fr; gap: 12px; }
+      .card-date { text-align: left; }
+      .card-date .day { font-size: 24px; display: inline; margin-right: 4px; }
+      .card-date .month { display: inline; }
+      .card-date .weekday { display: inline; margin-left: 8px; }
+      .controls-bar { gap: 12px; }
+      .draft-content { padding: 20px 16px; }
+      .draft-post { padding: 16px; }
+      .month-cal { padding: 16px; }
+      .month-cal-legend { flex-wrap: wrap; gap: 8px; }
+    }
+
+    @media print {
+      body { padding: 20px; background: #fff; }
+      .header-actions { display: none; }
+      .month-cal-nav { display: none; }
+      .filters { display: none; }
+      .controls-bar { display: none; }
+      .persona-guidance { display: none; }
+      .time-rec { display: none; }
+      .entry { break-inside: avoid; border: 1px solid #ddd; margin-bottom: 16px; }
+      .entry-header { pointer-events: none; }
+      .entry-header:hover { background: transparent; }
+      .expand-hint { display: none; }
+      .drafts-panel { display: block !important; border-top: 1px solid #ddd; }
+      .draft-content { display: block !important; }
+      .copy-btn { display: none; }
+      .regen-cmd { display: none; }
+      .linkedin-actions { display: none; }
+      .linkedin-reactions { display: none; }
+      .linkedin-comment-wrap { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <div class="brand-mark">G</div>
+      <div>
+        <h1>LinkedIn Content Calendar</h1>
+        <p class="subtitle">Gorgias social media drafts</p>
+      </div>
+      <div class="header-actions">
+        <button class="action-btn" onclick="copyAllDrafts(event)">Copy All</button>
+        <button class="action-btn" onclick="window.print()">Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="month-cal" id="month-cal"></div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="thought_leadership">Thought Leadership</button>
+      <button class="filter-btn" data-filter="product">Product</button>
+      <button class="filter-btn" data-filter="engagement">Engagement</button>
+    </div>
+
+    <div class="calendar" id="calendar"></div>
+  </div>
+
+  <script>
+    const personas = [
+      { value: "CEO / Founder", guidance: "Frame around revenue growth, competitive advantage, operational efficiency. High-level strategic insight with one concrete proof point." },
+      { value: "CFO / VP of Finance", guidance: "Frame around unit economics, cost reduction, margin impact, ROI frameworks. Numbers-forward -- show the math." },
+      { value: "CIO / VP of IT", guidance: "Frame around tech stack integration, data governance, AI architecture, security. Technical precision." },
+      { value: "VP of CX / Operations", guidance: "Frame around team performance, automation rate, CSAT, proving ROI to leadership. Blend strategic framing with operational detail." },
+      { value: "VP of Ecommerce / Digital", guidance: "Frame around conversion, revenue attribution, AOV, pre-sale engagement. Revenue and tech stack focus." },
+      { value: "Support Director / Manager", guidance: "Frame around team efficiency, AI adoption, workflow optimization, proving value. Operational and tactical." },
+      { value: "Ecommerce / Digital Manager", guidance: "Frame around quick wins, conversion tactics, tool efficiency. Practical, tactical, minimal theory." },
+      { value: "Marketing Manager / CRM & Retention", guidance: "Frame around lifecycle flows, CX-marketing data integration, retention metrics. Cross-functional insights." }
+    ];
+
+    const tones = ["Data-Driven", "Conversational", "Provocative"];
+
+    const bestTimes = {
+      "CEO / Founder": { days: [2, 3], time: "7:00 - 8:00 AM", note: "Early morning, before exec meeting blocks" },
+      "CFO / VP of Finance": { days: [2, 3], time: "8:00 - 9:00 AM", note: "Pre-meeting window for finance leaders" },
+      "CIO / VP of IT": { days: [3, 4], time: "9:00 - 10:00 AM", note: "Mid-week peak for technical decision-makers" },
+      "VP of CX / Operations": { days: [2, 4], time: "9:00 - 10:00 AM", note: "Highest engagement window for CX content" },
+      "VP of Ecommerce / Digital": { days: [3, 4], time: "10:00 - 11:00 AM", note: "Post-standup window, commerce audience active" },
+      "Support Director / Manager": { days: [2, 4], time: "12:00 - 1:00 PM", note: "Lunch-break engagement for support leaders" },
+      "Ecommerce / Digital Manager": { days: [2, 3], time: "12:00 - 1:00 PM", note: "Midday content consumption peak" },
+      "Marketing Manager / CRM & Retention": { days: [2, 3], time: "10:00 - 11:00 AM", note: "Morning content window for marketing roles" }
+    };
+
+    const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const monthNamesFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    let calYear = 2026;
+    let calMonth = 1; // February (0-indexed)
+
+    const entries = [
+      {
+        post_type: "thought_leadership_contrarian",
+        topic: "Why CSAT is a lagging indicator",
+        hook: "Most CX leaders optimize for CSAT. The highest-performing teams barely look at it.",
+        persona: "VP of CX / Operations",
+        industry: "General",
+        product_focus: "None",
+        proof_point: "Teams measuring resolution quality see 23% higher repeat purchase rates",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-17",
+        notes: "Tie to upcoming research brief",
+        drafts: {
+          "Data-Driven": {
+            body: `CSAT tells you how customers felt yesterday. It tells you nothing about what they'll do tomorrow.
+
+We analyzed support performance across hundreds of ecommerce brands. The ones with the highest repeat purchase rates weren't optimizing for satisfaction scores.
+
+They were measuring resolution quality.
+
+Specifically: Was the issue fully resolved in one interaction? Did the customer get accurate information? Did the response match the brand's tone and policies?
+
+Teams that track these signals see 23% higher repeat purchase rates than teams chasing CSAT alone.
+
+The problem with CSAT is that it rewards speed and friendliness. Both matter. Neither predicts retention.
+
+A customer can rate you 5 stars today and churn next month because the underlying issue was patched, not fixed.
+
+The shift is subtle but significant. Stop asking "Was the customer happy?" and start asking "Did we actually solve it?"
+
+What's the primary metric your CX team reports on? Still CSAT, or something else?`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `The highest-performing CX teams I've studied have something in common.
+
+They barely look at CSAT.
+
+That sounds counterintuitive. But here's what the data shows:
+
+CSAT captures sentiment at a single point in time. It rewards fast, friendly responses. It doesn't measure whether the problem actually got fixed.
+
+A customer whose refund was processed quickly gives you a 5. Then they return the next item too, because the root cause (wrong size recommendation) was never addressed.
+
+Meanwhile, teams measuring resolution quality -- did we fully solve it, in one touch, with accurate information -- see 23% higher repeat purchase rates over 6 months.
+
+The metric you optimize for shapes the behavior of your entire team.
+
+Optimize for CSAT and you get polite band-aids.
+
+Optimize for resolution quality and you get outcomes that compound.
+
+This doesn't mean CSAT is useless. It means it's a trailing signal, not a leading one.
+
+What's the one metric you'd keep if you could only track one?`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `Your CSAT score is 4.7 out of 5.
+
+Your repeat purchase rate dropped 8% this quarter.
+
+These two facts are not contradictory. They're the natural result of measuring the wrong thing.
+
+CSAT measures how people feel about an interaction. It doesn't measure whether the interaction actually solved their problem. Those are two very different questions.
+
+A customer can feel great about a fast, friendly response and still churn because the underlying issue persists.
+
+When ecommerce brands shift from tracking satisfaction to tracking resolution quality, the results are consistent: 23% higher repeat purchase rates within two quarters.
+
+Resolution quality means: Was it solved completely? In one interaction? With accurate information? Without the customer needing to follow up?
+
+That's a harder bar than "Was the agent nice?" But it's the bar that predicts revenue.
+
+CSAT isn't bad data. It's just not the data that moves the business.
+
+Agree or disagree? What are you measuring instead?`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "thought_leadership_data_insight",
+        topic: "The Tuesday support paradox",
+        hook: "AI deflection rates drop 23% on Tuesdays. Here is why.",
+        persona: "Support Director / Manager",
+        industry: "General",
+        product_focus: "AI Agent - Support Agent",
+        proof_point: "23% mid-week deflection drop",
+        cta_type: "traffic",
+        link_url: "https://gorgias.com/blog/tuesday-paradox",
+        scheduled_date: "2026-02-18",
+        notes: "Reference internal data story",
+        drafts: {
+          "Data-Driven": {
+            body: `AI deflection rates drop 23% on Tuesdays.
+
+Not because the AI gets worse. Because the tickets get harder.
+
+Monday is dominated by simple, high-volume inquiries. WISMO. Order status. Password resets. These are the tickets AI handles best.
+
+By Tuesday, the backlog shifts. Customers who waited over the weekend escalate. Multi-touch issues surface. Return disputes pile up.
+
+The AI doesn't fail. It correctly identifies that these tickets need a human.
+
+The takeaway: if you're benchmarking your AI performance on weekly averages, you're masking a pattern that matters. Tuesday through Thursday is where your human team earns its keep.
+
+Staff accordingly.
+
+Full breakdown in the comments.`,
+            comment: "We dug into why AI deflection rates fluctuate mid-week and what it means for staffing and automation strategy. Full analysis here: https://gorgias.com/blog/tuesday-paradox"
+          },
+          "Conversational": {
+            body: `Here's a pattern most support teams miss.
+
+AI deflection rates peak on Monday and drop 23% by Tuesday.
+
+The reason is straightforward. Monday tickets are high-volume, low-complexity. Shipping status. Order lookups. Password resets. These are exactly what autonomous AI resolves best.
+
+Tuesday's queue is different. Weekend frustrations have compounded. Return disputes need judgment calls. Subscription issues require policy interpretation.
+
+The AI isn't failing on Tuesday. It's triaging accurately.
+
+The real question: is your team structured to handle what the AI correctly hands off?
+
+Most brands staff evenly across the week. The data says that's wrong.
+
+Full breakdown in the first comment.`,
+            comment: "We analyzed deflection patterns across thousands of ecommerce brands. Here's what Tuesday looks like under the hood: https://gorgias.com/blog/tuesday-paradox"
+          },
+          "Provocative": {
+            body: `Your AI resolves the most tickets on Monday. By Tuesday, deflection drops 23%.
+
+This isn't a bug. It's a signal.
+
+Monday tickets are simple. Weekend order inquiries, shipping status checks, basic account questions. AI handles these at high volume with high accuracy.
+
+Tuesday brings the complex stuff. Customers who couldn't get resolution over the weekend. Multi-item returns. Billing disputes that require judgment.
+
+The 23% drop isn't AI underperforming. It's AI correctly routing harder problems to humans.
+
+If your team isn't staffed heavier Tuesday through Thursday, you're fighting the pattern instead of using it.
+
+Link to the full data in comments.`,
+            comment: "Here's the full data on mid-week deflection patterns and how to adjust your staffing model: https://gorgias.com/blog/tuesday-paradox"
+          }
+        }
+      },
+      {
+        post_type: "thought_leadership_industry_commentary",
+        topic: "AI is changing how shoppers discover products",
+        hook: "Search bars are becoming obsolete for product discovery. Conversation is replacing navigation.",
+        persona: "VP of Ecommerce / Digital",
+        industry: "General",
+        product_focus: "AI Agent - Shopping Assistant",
+        proof_point: "2% sales lift from conversational shopping",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-19",
+        notes: "Align with Shopify ecosystem trends",
+        drafts: {
+          "Data-Driven": {
+            body: `The search bar had a good run. But the way shoppers find products is changing.
+
+Instead of typing "blue running shoes size 10" into a filter, they're asking: "I need something for trail running in wet conditions. I overpronate. What do you have under $150?"
+
+That's not a search query. That's a conversation. And it requires a fundamentally different interface.
+
+Brands running conversational product guidance are seeing a 2% sales lift. Not from showing more products, but from understanding intent before showing anything.
+
+The shift is already happening. Shoppers expect the same experience they get from a knowledgeable store associate. Except it's midnight and they're on their phone.
+
+Traditional site search matches keywords. Conversational AI matches intent, context, and preference.
+
+The brands that figure this out first will own the consideration moment. The rest will keep optimizing filter dropdowns.
+
+How are you handling product discovery on your site today?`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `Nobody walks into a store and searches a database.
+
+They ask someone: "I'm looking for a gift for my wife. She likes minimalist jewelry. Budget is around $300."
+
+Online, we've spent 20 years forcing shoppers to translate that intent into filters and keywords. It worked. But it's not how people actually think about purchasing.
+
+Conversational product discovery changes this. Instead of browse-and-filter, shoppers describe what they need and get guided to the right product through dialogue.
+
+The results are measurable. Brands using conversational AI for pre-sale guidance see a 2% sales lift, driven by higher conversion on considered purchases.
+
+That 2% compounds. It comes from converting the shoppers who would have bounced because they couldn't find what they needed through navigation alone.
+
+The Shopify ecosystem is moving toward this model quickly. Site search isn't disappearing. But it's no longer the primary discovery mechanism for high-consideration products.
+
+What's your current product discovery experience? Search-first or conversation-first?`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `A shopper lands on your PDP at 10 PM.
+
+She has a specific question: "Will this foundation oxidize on oily skin?"
+
+Your search bar can't answer that. Your FAQ doesn't cover it. Live chat is offline.
+
+She leaves. You never know she was there.
+
+This is the product discovery gap that conversational AI fills. Not by replacing search, but by handling the questions that search can't.
+
+Sizing. Compatibility. Use-case fit. Ingredient concerns. Gift suitability.
+
+These are the moments where a shopper is closest to buying and most likely to abandon. They need a conversation, not a catalog.
+
+Brands deploying AI-powered product guidance at these moments see a 2% sales lift. The gains are concentrated in high-consideration categories where the gap between "interested" and "purchased" is a single unanswered question.
+
+Search bars match keywords. Conversations match intent.
+
+The brands investing in this now are going to own the consideration moment.
+
+How is your team approaching pre-sale product guidance?`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "product_proof_point",
+        topic: "How one beauty brand cut cost-per-resolution 62%",
+        hook: "This beauty brand was spending $8.40 per ticket. Six months later that number was $3.20.",
+        persona: "Support Director / Manager",
+        industry: "Beauty & Cosmetics",
+        product_focus: "AI Agent - Support Agent",
+        proof_point: "Cost-per-resolution $8.40 to $3.20 in 6 months",
+        cta_type: "traffic",
+        link_url: "https://gorgias.com/case-studies/beauty",
+        scheduled_date: "2026-02-20",
+        notes: "Anonymized customer data",
+        drafts: {
+          "Data-Driven": {
+            body: `$8.40 per ticket.
+
+That's what this beauty brand was spending on every support interaction. Shade-matching questions. Ingredient inquiries. Application how-tos. Each one required a trained specialist to answer accurately.
+
+With 8,000+ tickets per month and 40% YoY growth, the math was brutal. Hiring fast enough wasn't realistic. Training time alone was 6 weeks per agent.
+
+They deployed an autonomous AI agent trained on their full product catalog, ingredient database, and brand guidelines. Not a generic chatbot. An AI that could answer "Will this oxidize on combination skin?" with the same accuracy as their best agent.
+
+Six months later: $3.20 per resolution. A 62% reduction.
+
+The AI handles shade-matching, ingredient questions, and routine post-purchase inquiries autonomously. Specialists now focus on complex skin consultations that actually require human judgment.
+
+The escalation rate sits at 0.3%.
+
+Full case study in the comments.`,
+            comment: "Here's how this beauty brand reduced cost-per-resolution by 62% while handling 40% ticket growth without additional headcount: https://gorgias.com/case-studies/beauty"
+          },
+          "Conversational": {
+            body: `Beauty brands have a unique scaling problem.
+
+Every shade-matching question requires product expertise. Every ingredient inquiry needs accuracy. You can't automate these with basic macros or decision trees.
+
+One mid-market beauty brand was stuck at $8.40 per resolution with 8,000 monthly tickets growing 40% year over year. Three open headcount reqs. Six-week training ramp per agent.
+
+Their solution: an AI agent trained on their specific product catalog, shade ranges, ingredient profiles, and brand tone.
+
+Not generic responses. Brand-accurate answers to questions like "Which shade matches NC30?" and "Is this safe for sensitive skin?"
+
+The result over 6 months:
+
+Cost-per-resolution dropped from $8.40 to $3.20.
+
+The AI resolves shade and ingredient questions autonomously. Escalation rate: 0.3% vs. the 12% industry average.
+
+Their specialists now handle complex consultations. The ones that actually need a human.
+
+Link to the full breakdown in comments.`,
+            comment: "See the full case study on how this beauty brand scaled CX without scaling headcount: https://gorgias.com/case-studies/beauty"
+          },
+          "Provocative": {
+            body: `When your tickets grow 40% year over year and your hiring can't keep pace, something has to give.
+
+For one beauty brand processing 8,000 monthly tickets, that something was cost-per-resolution. It sat at $8.40 and was climbing.
+
+The bottleneck was expertise. Shade-matching, ingredient safety, application guidance. These aren't FAQ-level questions. They require product knowledge that takes weeks to train.
+
+They deployed an autonomous AI agent trained specifically on their catalog, ingredient data, and brand guidelines. The AI answers the same questions their best agents do. At any hour. In the brand's voice.
+
+Six months in:
+
+$8.40 per resolution became $3.20. A 62% drop.
+
+0.3% escalation rate. The AI knows when it doesn't know.
+
+The team didn't shrink. It refocused. Specialists handle the consultations that require human nuance. Everything else runs autonomously.
+
+Full story in the first comment.`,
+            comment: "Here's the complete story of how autonomous AI reduced this beauty brand's support costs by 62%: https://gorgias.com/case-studies/beauty"
+          }
+        }
+      },
+      {
+        post_type: "product_use_case",
+        topic: "After-hours sizing questions kill jewelry conversion",
+        hook: "A shopper hesitates on ring sizing at 9 PM. Nobody answers. They leave.",
+        persona: "VP of Ecommerce / Digital",
+        industry: "Jewelry",
+        product_focus: "AI Agent - Shopping Assistant",
+        proof_point: "High-AOV brands see 2% revenue lift from 24/7 AI",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-21",
+        notes: "",
+        drafts: {
+          "Data-Driven": {
+            body: `9:14 PM. A shopper is on your ring product page.
+
+She has two questions. Will this fit a size 7 finger? Can it be engraved?
+
+Your live chat is offline. Your FAQ covers neither. Your size guide is a static PDF.
+
+She closes the tab.
+
+For jewelry brands, 40% of browsing happens after business hours. These aren't casual browsers. High-AOV categories attract considered shoppers. They research. They compare. They have specific questions.
+
+When nobody answers, they don't come back. They find a brand that does answer.
+
+Jewelry brands running AI-powered product guidance 24/7 report a 2% revenue lift. The AI handles sizing, customization, compatibility, and care questions using the brand's own product data.
+
+It doesn't guess. It consults the brand's Guidance -- the same rules a trained associate would follow.
+
+The conversion gap isn't a traffic problem. It's an availability problem.
+
+How are you handling after-hours traffic on high-consideration products?`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `The most expensive moment in jewelry ecommerce is the one where nobody's there.
+
+A shopper finds a bracelet. Loves the design. Needs to know if 7-inch will fit her wrist, and whether the clasp works for someone with arthritis.
+
+It's 9:30 PM. No one answers.
+
+She doesn't submit a ticket. She doesn't bookmark the page. She leaves.
+
+This happens hundreds of times a week for high-AOV brands. The traffic is there. The intent is there. The conversion doesn't happen because the question goes unanswered.
+
+AI-powered product guidance changes this. An autonomous shopping assistant, trained on the brand's sizing charts, customization options, and product specs, answers at any hour. Accurately. In the brand's tone.
+
+High-AOV brands running this see a 2% revenue lift. Not from more traffic. From converting the traffic that already existed.
+
+After-hours is where the revenue is hiding.
+
+Running into this on your site?`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `Here's what kills conversion for jewelry brands.
+
+It's not price. It's not shipping cost. It's unanswered questions at the moment of consideration.
+
+"Will this pendant sit at collarbone length?"
+"Can I resize later if it doesn't fit?"
+"Is this stone ethically sourced?"
+
+These questions arrive between 7 PM and 11 PM. Peak browsing hours. Off-hours for most support teams.
+
+The shopper pauses. Looks for a chat widget. Sees "offline." Leaves.
+
+For products with $200+ AOV, that's not a support gap. That's a revenue gap.
+
+Brands deploying AI product guidance 24/7 see a 2% revenue lift by converting these exact sessions. The AI is trained on the brand's sizing data, materials info, and customization policies. It answers like a knowledgeable associate. At midnight.
+
+The traffic was always there. The conversion wasn't, because the conversation wasn't.
+
+What's your after-hours conversion rate vs. business hours?`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "product_customer_outcome",
+        topic: "From 9000 tickets to 60% autonomous resolution",
+        hook: "An apparel brand processing 9K monthly tickets hit 60% autonomous resolution in 90 days.",
+        persona: "VP of CX / Operations",
+        industry: "Apparel",
+        product_focus: "AI Agent - Support Agent",
+        proof_point: "60% autonomous resolution in 90 days",
+        cta_type: "traffic",
+        link_url: "https://gorgias.com/case-studies/apparel",
+        scheduled_date: "2026-02-24",
+        notes: "",
+        drafts: {
+          "Data-Driven": {
+            body: `9,000 tickets a month. Sizing questions alone drove 35% of them.
+
+This apparel brand had a familiar problem. Every new drop multiplied pre-sale inquiries. Fit questions. Fabric composition. Return eligibility. Their team was stuck in reactive mode.
+
+They deployed an autonomous AI agent trained on their size charts, product specs, fit notes, and return policies.
+
+90 days later: 60% autonomous resolution.
+
+The AI handles sizing questions, WISMO, returns eligibility, and fabric inquiries without human involvement. It uses the brand's own Guidance to make decisions, not generic responses.
+
+Escalation rate: 0.3%.
+
+The human team didn't shrink. They shifted from answering the same sizing question 400 times a week to handling complex exchanges, VIP customers, and edge cases.
+
+The result is a CX operation that scales with product launches instead of buckling under them.
+
+Full case study in the comments.`,
+            comment: "See how this apparel brand went from 9K monthly tickets to 60% autonomous resolution in 90 days: https://gorgias.com/case-studies/apparel"
+          },
+          "Conversational": {
+            body: `Every product drop used to be a staffing crisis for this apparel brand.
+
+9,000 monthly tickets. 35% driven by sizing and fit questions. A new denim line launch meant 4x the normal pre-sale inquiry volume.
+
+Hiring wasn't fast enough. Training took weeks. Seasonal staff didn't know the products well enough.
+
+They took a different approach. An autonomous AI agent, trained on their size charts, fabric composition, fit notes, and return policies.
+
+Within 90 days:
+
+60% of tickets resolved autonomously. Zero human involvement on sizing, WISMO, address changes, and standard returns.
+
+0.3% escalation rate. The AI knows the boundaries of what it can resolve.
+
+The team reallocated to complex exchanges, styling consultations, and VIP accounts. The work that requires judgment and relationship-building.
+
+Product drops went from a staffing emergency to a normal week.
+
+Full story in the comments.`,
+            comment: "Here's the full case study on going from reactive support to 60% autonomous resolution in 90 days: https://gorgias.com/case-studies/apparel"
+          },
+          "Provocative": {
+            body: `Before: 9,000 monthly tickets. Team drowning during every product drop.
+
+After: 60% autonomous resolution. 90 days.
+
+Here's what happened.
+
+This apparel brand's biggest volume driver was sizing and fit. 35% of all tickets. Every launch meant a flood of "Will this run large?" and "What's the inseam on the relaxed fit?"
+
+They trained an AI agent on their complete size charts, fit notes, product specs, and return policies. Not a generic chatbot. An AI that knows the brand's products as well as a senior associate.
+
+The AI now resolves sizing inquiries, order status checks, return eligibility, and address changes autonomously. It knows when to handle it and when to hand off.
+
+The 0.3% escalation rate tells the story.
+
+Their team now focuses on the 40% of tickets that genuinely need a human. Complex returns. VIP styling. Cross-order issues.
+
+That's the shift. Not fewer people. Better allocation.
+
+Link in the first comment.`,
+            comment: "Full case study on how this apparel brand reached 60% autonomous resolution: https://gorgias.com/case-studies/apparel"
+          }
+        }
+      },
+      {
+        post_type: "engagement_poll",
+        topic: "What is the biggest bottleneck in your CX stack right now?",
+        hook: "Every CX leader has one thing keeping them up at night. Which is yours?",
+        persona: "Support Director / Manager",
+        industry: "General",
+        product_focus: "None",
+        proof_point: "",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-25",
+        notes: "Options: Ticket volume / Agent burnout / Tech sprawl / Proving ROI",
+        drafts: {
+          "Data-Driven": {
+            body: `Every CX leader has one thing slowing them down right now. What's yours?
+
+Talked to dozens of support and CX leaders this quarter. The same four bottlenecks kept coming up.
+
+Curious which one hits hardest for your team.
+
+Poll:
+- Ticket volume outpacing headcount
+- Agent burnout and turnover
+- Too many tools, not enough integration
+- Can't prove ROI to leadership
+- Other (drop it in the comments)`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `Quick poll for the CX leaders in my network.
+
+You've got budget constraints, growing ticket volume, a fragmented tech stack, and a leadership team asking for ROI proof.
+
+But if you could only fix one thing this quarter, which would it be?
+
+Poll:
+- Ticket volume that keeps outpacing the team
+- Agent burnout and attrition
+- Too many disconnected tools
+- No clear way to prove ROI
+- Other (comment below)
+
+I'll share what I'm seeing in the results next week.`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `What's the single biggest bottleneck in your CX operation right now?
+
+Not the one you report on. The one that actually keeps you up.
+
+Four themes keep surfacing in every CX conversation I have. I want to know which one resonates most.
+
+Poll:
+- Ticket volume growing faster than we can hire
+- Agent burnout and retention
+- Tech sprawl across too many tools
+- Proving CX ROI to the exec team
+- Other (tell me in the comments)`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "engagement_question",
+        topic: "What did you automate first and was it the right call?",
+        hook: "Most teams start with WISMO. But the highest-cost tickets are often hiding in the medium-complexity bucket.",
+        persona: "VP of CX / Operations",
+        industry: "General",
+        product_focus: "None",
+        proof_point: "",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-26",
+        notes: "",
+        drafts: {
+          "Data-Driven": {
+            body: `When you first automated support, what did you start with?
+
+Most teams begin with WISMO. Makes sense. It's high-volume, repetitive, and straightforward.
+
+But here's what the data keeps showing: the highest cost-per-resolution tickets aren't the simple ones. They're the medium-complexity tickets that require 3-4 back-and-forth messages before resolution.
+
+Returns with conditions. Subscription modifications. Partial refunds.
+
+These eat more agent time per ticket than the simple stuff, and they're often automatable with the right business rules.
+
+Starting with WISMO is logical. But it might not be where the biggest ROI sits.
+
+What did your team automate first? And knowing what you know now, would you do it the same way?
+
+Drop your answer below.`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `Here's a question I keep asking CX leaders.
+
+"What did you automate first?"
+
+The answer is almost always WISMO. Logical. It's the highest-volume, lowest-complexity ticket type.
+
+But the second question is more interesting: "Was that the right call?"
+
+The answers get complicated. Because while WISMO is easy to automate, the per-ticket cost savings are relatively small. The tickets that actually drain your team are in the medium-complexity range. Returns. Subscription changes. Refunds with conditions.
+
+These require multiple messages, policy lookups, and judgment. And they're often more automatable than people assume.
+
+What was your first automation target? Would you pick the same one today?
+
+Curious what others are seeing.`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `WISMO. That's the answer I hear 90% of the time when I ask CX leaders what they automated first.
+
+It makes sense. "Where is my order?" is high volume and repetitive.
+
+But was it the right starting point?
+
+The medium-complexity tickets -- returns with conditions, subscription changes, partial refunds -- often cost 3-4x more in agent time per resolution. They're less obvious automation targets, but the ROI per ticket is significantly higher.
+
+Curious about your experience:
+
+What did you automate first? And if you could go back, would you make the same call?`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "engagement_hot_take",
+        topic: "Support teams should report to the CFO",
+        hook: "CX generates more revenue data than any other department. Why does it report to ops?",
+        persona: "CEO / Founder",
+        industry: "General",
+        product_focus: "None",
+        proof_point: "Support-influenced revenue averages 15% of total revenue for Gorgias merchants",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-27",
+        notes: "Bold take to drive debate",
+        drafts: {
+          "Data-Driven": {
+            body: `Support teams should report to the CFO.
+
+Here's why.
+
+CX generates more revenue-relevant data than almost any other department. Purchase intent signals. Churn predictors. Product feedback. Upsell opportunities.
+
+Support-influenced revenue averages 15% of total revenue across ecommerce brands we work with.
+
+Yet in most orgs, support reports to ops. It's treated as a cost center. Budgets get cut when margins tighten. Headcount is the first casualty.
+
+When support reports to finance, two things change.
+
+First, the team starts measuring what the CFO cares about: revenue impact, cost-per-resolution, LTV influence.
+
+Second, the CFO starts seeing support as a revenue function, not an expense line.
+
+The reporting line shapes how the entire company values CX.
+
+Hot take or cold truth?`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `Most companies treat support as a cost center. Then they wonder why it's always underfunded.
+
+The reporting line is the problem.
+
+When CX reports to operations, it's measured on efficiency. Handle time. Cost per ticket. Headcount ratios. These are important, but they frame support as an expense to minimize.
+
+Support-influenced revenue averages 15% of total revenue for ecommerce brands. Pre-sale conversions. Retention saves. Upsell assists. Churn prevention.
+
+That's not a cost center. That's a revenue function.
+
+My take: support teams should report to the CFO. Not because finance should run CX. But because the CFO is the person who can quantify the gap between what support costs and what it generates.
+
+Once that gap is visible, the investment case makes itself.
+
+Agree? Disagree? Where does your CX team sit in the org chart?`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `Your support team is sitting on more revenue data than your marketing team.
+
+Purchase intent. Churn signals. Product-market feedback. Conversion blockers. Every ticket is a data point about why customers buy, stay, or leave.
+
+Support-influenced revenue averages 15% of total for the ecommerce brands I see up close.
+
+So why does CX still report to operations in most orgs?
+
+When it reports to ops, it gets measured on cost. Headcount. Handle time. Efficiency.
+
+When it reports to the CFO, it gets measured on impact. Revenue influenced. Retention lifted. Cost avoided.
+
+Same team. Same work. Different lens. Completely different investment decisions.
+
+Support should report to the CFO. Not because it's a finance function. Because the CFO is the person best positioned to see its actual value.
+
+Fight me in the comments.`,
+            comment: "None."
+          }
+        }
+      },
+      {
+        post_type: "engagement_trend",
+        topic: "Everyone is talking about AI agents. Most are deploying them wrong.",
+        hook: "The gap is not in the AI. It is in the Guidance layer that tells AI what to do and when.",
+        persona: "VP of CX / Operations",
+        industry: "General",
+        product_focus: "AI Agent - Support Agent",
+        proof_point: "0.3% escalation rate vs 12% industry average",
+        cta_type: "engagement",
+        link_url: "",
+        scheduled_date: "2026-02-28",
+        notes: "",
+        drafts: {
+          "Data-Driven": {
+            body: `Everyone is deploying AI agents in CX right now.
+
+Most are deploying them wrong.
+
+The pattern I keep seeing: brands plug in an AI, point it at their knowledge base, and expect it to handle tickets. It hallucinates. It gives vague answers. It escalates too often. They conclude the AI "isn't ready."
+
+The AI is fine. The Guidance layer is missing.
+
+Guidance is the set of business rules that tells AI what to do, when to do it, and when to stop. Refund thresholds. Return eligibility logic. Escalation triggers. Brand tone guardrails.
+
+Without it, AI is a general-purpose language model answering tickets. With it, AI acts like a trained senior agent who knows the policies.
+
+The difference in outcomes is stark. Brands with a defined Guidance layer see 0.3% escalation rates. The industry average is 12%.
+
+The gap isn't the model. It's the instructions you give it.
+
+Where do you stand on this?`,
+            comment: "None."
+          },
+          "Conversational": {
+            body: `Every CX team I talk to is either deploying AI agents or evaluating them.
+
+But there's a pattern in who succeeds and who pulls back.
+
+The teams that struggle deploy AI and point it at documentation. The AI reads the knowledge base, generates responses, and handles tickets. Sometimes accurately. Sometimes not.
+
+The teams that succeed deploy AI with a Guidance layer. Structured business rules that encode how to handle specific scenarios. When to refund. When to ask for evidence. When to route to a human. In what tone.
+
+This is the difference between an AI that acts like an intern reading docs and an AI that acts like a trained senior agent.
+
+The numbers back it up. Brands with defined Guidance see 0.3% escalation rates. The industry average for AI-handled tickets is 12%.
+
+Same models. Same tickets. Radically different instructions.
+
+If your AI is underperforming, the first question isn't "Is the AI good enough?" It's "Did we give it clear enough rules?"
+
+Where do you stand?`,
+            comment: "None."
+          },
+          "Provocative": {
+            body: `The AI agent hype cycle is in full swing. Here's what most teams are getting wrong.
+
+They're focused on the AI. They should be focused on the Guidance.
+
+An AI agent without business rules is just a language model answering tickets. It doesn't know your refund policy. It doesn't know when to escalate. It doesn't know your brand voice.
+
+So it guesses. Sometimes well. Often not.
+
+The fix isn't a better model. It's a better Guidance layer. The structured set of rules that tells AI: here's when to issue a refund, here's when to ask for a photo, here's when to hand off to a human.
+
+Brands that invest in Guidance before deploying AI see 0.3% escalation rates. Brands that skip it see the industry average: 12%.
+
+That's a 40x difference. Same AI. Different instructions.
+
+The model is the easy part. The rules are the hard part. That's where most teams need to focus.
+
+What's been your experience deploying AI in CX?`,
+            comment: "None."
+          }
+        }
+      }
+    ];
+
+    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Track per-entry selections
+    const selections = entries.map(e => ({
+      persona: e.persona,
+      tone: "Data-Driven",
+      date: e.scheduled_date
+    }));
+
+    function getTagClass(pt) {
+      if (pt.startsWith("thought_leadership")) return "tag-type";
+      if (pt.startsWith("product")) return "tag-product";
+      return "tag-engagement";
+    }
+
+    function getFamilyLabel(pt) {
+      if (pt.startsWith("thought_leadership")) return "Thought Leadership";
+      if (pt.startsWith("product")) return "Product";
+      return "Engagement";
+    }
+
+    function getTypeLabel(pt) {
+      const p = pt.split("_");
+      if (p[0] === "thought" && p[1] === "leadership") return p.slice(2).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+      return p.slice(1).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+    }
+
+    function esc(text) {
+      const d = document.createElement("div");
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    function getGuidance(personaValue) {
+      const p = personas.find(x => x.value === personaValue);
+      return p ? p.guidance : "";
+    }
+
+    function buildRegenCmd(entry, idx) {
+      const s = selections[idx];
+      let cmd = `python social/social-agent.py --topic "${entry.topic}" --tone "${s.tone}"`;
+      if (s.persona !== entry.persona) cmd += ` --persona "${s.persona}"`;
+      return cmd;
+    }
+
+    function getDotClass(postType) {
+      if (postType.startsWith("thought_leadership")) return "dot-thought";
+      if (postType.startsWith("product")) return "dot-product";
+      return "dot-engagement";
+    }
+
+    function renderMonthCalendar() {
+      const container = document.getElementById("month-cal");
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === calYear && today.getMonth() === calMonth;
+
+      // Build map of date -> entries
+      const dateMap = {};
+      entries.forEach((entry, idx) => {
+        const d = selections[idx].date;
+        if (!dateMap[d]) dateMap[d] = [];
+        dateMap[d].push({ entry, idx });
+      });
+
+      let gridHTML = dayNamesShort.map(d => `<div class="day-header">${d}</div>`).join("");
+
+      for (let i = 0; i < firstDay; i++) {
+        gridHTML += '<div class="day-cell empty"><span class="day-num">0</span></div>';
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const postsOnDay = dateMap[dateStr] || [];
+        const isToday = isCurrentMonth && today.getDate() === day;
+        const hasPost = postsOnDay.length > 0;
+        const classes = ["day-cell", isToday ? "today" : "", hasPost ? "has-post" : ""].filter(Boolean).join(" ");
+        const dots = postsOnDay.map(p => `<span class="day-dot ${getDotClass(p.entry.post_type)}"></span>`).join("");
+        const firstIdx = hasPost ? postsOnDay[0].idx : -1;
+        const onclick = hasPost ? `onclick="scrollToEntry(${firstIdx})"` : "";
+
+        gridHTML += `<div class="${classes}" ${onclick}>
+          <span class="day-num">${day}</span>
+          <div class="day-dots">${dots}</div>
+        </div>`;
+      }
+
+      container.innerHTML = `
+        <div class="month-cal-header">
+          <div class="month-cal-title">${monthNamesFull[calMonth]} ${calYear}</div>
+          <div class="month-cal-nav">
+            <button onclick="changeMonth(-1)">&#8249;</button>
+            <button onclick="changeMonth(1)">&#8250;</button>
+          </div>
+        </div>
+        <div class="month-cal-legend">
+          <div class="legend-item"><span class="legend-dot dot-thought"></span> Thought Leadership</div>
+          <div class="legend-item"><span class="legend-dot dot-product"></span> Product</div>
+          <div class="legend-item"><span class="legend-dot dot-engagement"></span> Engagement</div>
+        </div>
+        <div class="month-cal-grid">${gridHTML}</div>
+      `;
+    }
+
+    function changeMonth(delta) {
+      calMonth += delta;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderMonthCalendar();
+    }
+
+    function scrollToEntry(idx) {
+      const el = document.querySelector(`.entry[data-idx="${idx}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("open");
+      }
+    }
+
+    function getBestTimeHTML(persona, dateStr) {
+      const bt = bestTimes[persona];
+      if (!bt) return "";
+      const d = new Date(dateStr + "T12:00:00");
+      const dayOfWeek = d.getDay();
+      const recDays = bt.days.map(n => weekdays[n]);
+      const isAligned = bt.days.includes(dayOfWeek);
+
+      if (isAligned) {
+        return `<div class="time-rec">
+          <span class="tr-label">Best time:</span>
+          ${recDays.join(" or ")}, ${bt.time} -- ${bt.note}
+        </div>`;
+      } else {
+        return `<div class="time-rec misaligned">
+          <span class="tr-label">Tip:</span>
+          ${weekdays[dayOfWeek]} works, but ${recDays.join(" or ")} at ${bt.time} typically performs better -- ${bt.note}
+        </div>`;
+      }
+    }
+
+    function setDate(event, idx) {
+      event.stopPropagation();
+      selections[idx].date = event.target.value;
+      renderCalendar(currentFilter);
+      renderMonthCalendar();
+      document.querySelector(`.entry[data-idx="${idx}"]`).classList.add("open");
+    }
+
+    function copyAllDrafts(event) {
+      let text = "LINKEDIN CONTENT CALENDAR -- GORGIAS\n";
+      text += "========================================\n\n";
+      entries.forEach((entry, idx) => {
+        const sel = selections[idx];
+        const draft = entry.drafts[sel.tone];
+        text += "[" + (idx + 1) + "] " + entry.topic + "\n";
+        text += "Date: " + sel.date + " | Tone: " + sel.tone + " | Persona: " + sel.persona + "\n";
+        text += "Type: " + entry.post_type + "\n";
+        text += "----------------------------------------\n\n";
+        text += draft.body + "\n";
+        if (draft.comment !== "None.") {
+          text += "\nFirst comment:\n" + draft.comment + "\n";
+        }
+        text += "\n========================================\n\n";
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy All"; btn.classList.remove("copied"); }, 2000);
+      });
+    }
+
+    function renderCalendar(filter) {
+      const cal = document.getElementById("calendar");
+      const filtered = filter === "all" ? entries : entries.filter(e => e.post_type.startsWith(filter));
+
+      cal.innerHTML = filtered.map(entry => {
+        const gi = entries.indexOf(entry);
+        const sel = selections[gi];
+        const d = new Date(sel.date + "T12:00:00");
+        const proof = entry.proof_point ? `<span class="label">Proof Point</span><span class="value">${esc(entry.proof_point)}</span>` : "";
+        const notes = entry.notes ? `<div class="notes" style="color:#888;font-style:italic;margin-top:6px;font-size:13px">${esc(entry.notes)}</div>` : "";
+        const guidance = getGuidance(sel.persona);
+        const showGuidance = sel.persona !== entry.persona;
+        const draft = entry.drafts[sel.tone];
+
+        const personaOpts = personas.map(p =>
+          `<option value="${esc(p.value)}" ${p.value === sel.persona ? "selected" : ""}>${esc(p.value)}</option>`
+        ).join("");
+
+        const toneTabs = tones.map(t =>
+          `<button class="tone-tab ${t === sel.tone ? 'active' : ''}" onclick="setTone(event, ${gi}, '${t}')">${t}</button>`
+        ).join("");
+
+        return `
+          <div class="entry" data-type="${entry.post_type}" data-idx="${gi}">
+            <div class="entry-header" onclick="toggleEntry(${gi})">
+              <div class="card-date">
+                <div class="month">${months[d.getMonth()]}</div>
+                <div class="day">${d.getDate()}</div>
+                <div class="weekday">${weekdays[d.getDay()]}</div>
+              </div>
+              <div class="card-body">
+                <div class="topic">${esc(entry.topic)}</div>
+                <div class="hook">${esc(entry.hook)}</div>
+                <div class="tags">
+                  <span class="tag ${getTagClass(entry.post_type)}">${getFamilyLabel(entry.post_type)}: ${getTypeLabel(entry.post_type)}</span>
+                  <span class="tag tag-cta">${entry.cta_type === "traffic" ? "Traffic" : "Engagement"} CTA</span>
+                  ${entry.industry !== "General" ? `<span class="tag tag-cta">${esc(entry.industry)}</span>` : ""}
+                </div>
+                <div class="expand-hint"><span class="arrow">&#9654;</span> View drafts</div>
+              </div>
+              <div class="card-meta">
+                ${proof}
+                ${notes}
+              </div>
+            </div>
+            <div class="drafts-panel">
+              <div class="controls-bar">
+                <div class="control-group">
+                  <span class="control-label">Persona</span>
+                  <select class="persona-select" onchange="setPersona(event, ${gi})" onclick="event.stopPropagation()">
+                    ${personaOpts}
+                  </select>
+                </div>
+                <div class="control-group">
+                  <span class="control-label">Tone</span>
+                  <div class="tone-tabs">${toneTabs}</div>
+                </div>
+                <div class="control-group">
+                  <span class="control-label">Date</span>
+                  <input type="date" class="date-input" value="${sel.date}" onchange="setDate(event, ${gi})" onclick="event.stopPropagation()">
+                </div>
+              </div>
+              <div class="persona-guidance ${showGuidance ? 'visible' : ''}" id="pg-${gi}">
+                <span class="pg-label">Persona shift:</span> ${esc(guidance)}
+              </div>
+              ${getBestTimeHTML(sel.persona, sel.date)}
+              <div class="draft-content active">
+                <div class="linkedin-preview">
+                  <button class="copy-btn" onclick="copyDraft(event, ${gi})">Copy</button>
+                  <div class="linkedin-header">
+                    <div class="linkedin-avatar">G</div>
+                    <div>
+                      <div class="linkedin-author-name">Gorgias</div>
+                      <div class="linkedin-author-meta">16,000+ followers · 1d</div>
+                    </div>
+                  </div>
+                  <div class="linkedin-body">${esc(draft.body)}</div>
+                  <div class="linkedin-reactions">12 reactions · 3 comments</div>
+                  <div class="linkedin-actions">
+                    <div class="linkedin-action">Like</div>
+                    <div class="linkedin-action">Comment</div>
+                    <div class="linkedin-action">Repost</div>
+                    <div class="linkedin-action">Send</div>
+                  </div>
+                </div>
+                ${draft.comment !== "None." ? `
+                <div class="linkedin-comment-wrap">
+                  <div class="linkedin-comment-avatar">G</div>
+                  <div class="linkedin-comment-bubble">
+                    <div class="linkedin-comment-name">Gorgias <span class="linkedin-comment-meta">· Author · 1d</span></div>
+                    ${esc(draft.comment)}
+                  </div>
+                </div>` : ""}
+                <div class="regen-cmd">
+                  <span class="cmd-label">Regenerate with agent</span>
+                  <button class="copy-cmd-btn" onclick="copyCmd(event, ${gi})">Copy</button>
+                  <span id="cmd-${gi}">${esc(buildRegenCmd(entry, gi))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function toggleEntry(idx) {
+      document.querySelector(`.entry[data-idx="${idx}"]`).classList.toggle("open");
+    }
+
+    function setPersona(event, idx) {
+      event.stopPropagation();
+      selections[idx].persona = event.target.value;
+      renderCalendar(currentFilter);
+      // Re-open the entry
+      document.querySelector(`.entry[data-idx="${idx}"]`).classList.add("open");
+    }
+
+    function setTone(event, idx, tone) {
+      event.stopPropagation();
+      selections[idx].tone = tone;
+      renderCalendar(currentFilter);
+      document.querySelector(`.entry[data-idx="${idx}"]`).classList.add("open");
+    }
+
+    function copyDraft(event, idx) {
+      event.stopPropagation();
+      const draft = entries[idx].drafts[selections[idx].tone];
+      const text = draft.comment !== "None."
+        ? draft.body + "\n\n---\nFirst comment:\n" + draft.comment
+        : draft.body;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        btn.textContent = "Copied";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+      });
+    }
+
+    function copyCmd(event, idx) {
+      event.stopPropagation();
+      const cmd = buildRegenCmd(entries[idx], idx);
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = event.target;
+        btn.textContent = "Copied";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+      });
+    }
+
+    let currentFilter = "all";
+
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter;
+        renderCalendar(currentFilter);
+      });
+    });
+
+    renderCalendar("all");
+    renderMonthCalendar();
+  </script>
+</body>
+</html>
