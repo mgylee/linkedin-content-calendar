@@ -531,26 +531,6 @@
       .month-cal-legend { flex-wrap: wrap; gap: 8px; }
     }
 
-    @media print {
-      body { padding: 20px; background: #fff; }
-      .header-actions { display: none; }
-      .month-cal-nav { display: none; }
-      .filters { display: none; }
-      .controls-bar { display: none; }
-      .persona-guidance { display: none; }
-      .time-rec { display: none; }
-      .entry { break-inside: avoid; border: 1px solid #ddd; margin-bottom: 16px; }
-      .entry-header { pointer-events: none; }
-      .entry-header:hover { background: transparent; }
-      .expand-hint { display: none; }
-      .drafts-panel { display: block !important; border-top: 1px solid #ddd; }
-      .draft-content { display: block !important; }
-      .copy-btn { display: none; }
-      .regen-cmd { display: none; }
-      .linkedin-actions { display: none; }
-      .linkedin-reactions { display: none; }
-      .linkedin-comment-wrap { break-inside: avoid; }
-    }
   </style>
 </head>
 <body>
@@ -563,7 +543,6 @@
       </div>
       <div class="header-actions">
         <button class="action-btn" onclick="copyAllDrafts(event)">Copy All</button>
-        <button class="action-btn" onclick="window.print()">Print / PDF</button>
       </div>
     </div>
 
@@ -591,7 +570,7 @@
       { value: "Marketing Manager / CRM & Retention", guidance: "Frame around lifecycle flows, CX-marketing data integration, retention metrics. Cross-functional insights." }
     ];
 
-    const tones = ["Data-Driven", "Conversational", "Provocative"];
+    const tones = ["Data-Driven", "Conversational", "Provocative", "Brand"];
 
     const bestTimes = {
       "CEO / Founder": { days: [2, 3], time: "7:00 - 8:00 AM", note: "Early morning, before exec meeting blocks" },
@@ -689,6 +668,22 @@ CSAT isn't bad data. It's just not the data that moves the business.
 
 Agree or disagree? What are you measuring instead?`,
             comment: "None."
+          },
+          "Brand": {
+            body: `We've analyzed support performance across thousands of ecommerce brands. The ones with the highest repeat purchase rates aren't chasing CSAT.
+
+They're measuring resolution quality.
+
+CSAT captures how a customer felt in the moment. It rewards speed and friendliness. It doesn't measure whether the issue was actually resolved.
+
+The difference matters. Brands tracking resolution quality -- full resolution in one touch, accurate information, consistent with brand policies -- see 23% higher repeat purchase rates.
+
+A 5-star CSAT rating and a churned customer are not mutually exclusive. We see it in the data regularly.
+
+The metric you optimize for shapes your team's behavior. Optimize for CSAT and you get fast band-aids. Optimize for resolution quality and you get outcomes that compound.
+
+What's the primary metric your CX team reports on?`,
+            comment: "None."
           }
         }
       },
@@ -756,6 +751,24 @@ If your team isn't staffed heavier Tuesday through Thursday, you're fighting the
 
 Link to the full data in comments.`,
             comment: "Here's the full data on mid-week deflection patterns and how to adjust your staffing model: https://gorgias.com/blog/tuesday-paradox"
+          },
+          "Brand": {
+            body: `We looked at AI deflection rates across our merchant base. The pattern is consistent.
+
+Monday: peak deflection. Tuesday: 23% drop.
+
+The AI doesn't get worse on Tuesday. The tickets get harder.
+
+Monday is dominated by WISMO, password resets, and order lookups. High volume, low complexity. Exactly what autonomous AI resolves best.
+
+Tuesday's queue shifts. Weekend frustrations compound. Multi-touch return disputes surface. Subscription issues require policy interpretation.
+
+The AI correctly identifies these tickets need a human. The deflection drop is a feature, not a bug.
+
+If you're benchmarking AI performance on weekly averages, you're missing this signal. Tuesday through Thursday is where your human team matters most.
+
+Full analysis in the comments.`,
+            comment: "We dug into why AI deflection rates fluctuate mid-week and what it means for staffing and automation strategy. Full analysis here: https://gorgias.com/blog/tuesday-paradox"
           }
         }
       },
@@ -830,6 +843,22 @@ Search bars match keywords. Conversations match intent.
 The brands investing in this now are going to own the consideration moment.
 
 How is your team approaching pre-sale product guidance?`,
+            comment: "None."
+          },
+          "Brand": {
+            body: `The way shoppers find products is changing. We're seeing it across our merchant base.
+
+Instead of filtering by size, color, and price, shoppers describe what they need. "I need trail running shoes for wet conditions. I overpronate. Budget is $150."
+
+That's not a search query. That's a conversation.
+
+Brands running conversational product guidance see a 2% sales lift. The gains come from converting shoppers who would have bounced because filters couldn't capture their intent.
+
+Site search matches keywords. Conversational AI matches intent, context, and preference. At any hour.
+
+The Shopify ecosystem is shifting toward this model. The brands adapting first are capturing the consideration moment their competitors lose.
+
+How is your team approaching product discovery today?`,
             comment: "None."
           }
         }
@@ -906,6 +935,22 @@ The team didn't shrink. It refocused. Specialists handle the consultations that 
 
 Full story in the first comment.`,
             comment: "Here's the complete story of how autonomous AI reduced this beauty brand's support costs by 62%: https://gorgias.com/case-studies/beauty"
+          },
+          "Brand": {
+            body: `One beauty brand on our platform was spending $8.40 per support interaction.
+
+Shade-matching. Ingredient questions. Application guidance. Each required a trained specialist. With 8,000+ tickets per month growing 40% YoY, hiring couldn't keep pace.
+
+They deployed an AI agent trained on their full catalog, ingredient database, and brand guidelines. Not generic responses -- brand-accurate answers to questions like "Will this oxidize on combination skin?"
+
+Six months later: $3.20 per resolution. A 62% reduction.
+
+The AI handles shade-matching and ingredient inquiries autonomously. Escalation rate: 0.3%.
+
+Their specialists now focus on complex skin consultations that genuinely require human expertise.
+
+Full case study in the comments.`,
+            comment: "Here's how this beauty brand reduced cost-per-resolution by 62% while handling 40% ticket growth without additional headcount: https://gorgias.com/case-studies/beauty"
           }
         }
       },
@@ -984,6 +1029,22 @@ Brands deploying AI product guidance 24/7 see a 2% revenue lift by converting th
 The traffic was always there. The conversion wasn't, because the conversation wasn't.
 
 What's your after-hours conversion rate vs. business hours?`,
+            comment: "None."
+          },
+          "Brand": {
+            body: `40% of browsing on jewelry sites happens after business hours.
+
+These aren't casual visitors. High-AOV categories attract considered shoppers with specific questions.
+
+"Will this fit a size 7 finger?" "Can it be engraved?" "Is this stone ethically sourced?"
+
+When nobody answers, they leave. For products above $200 AOV, each unanswered question is lost revenue.
+
+Jewelry brands on our platform running 24/7 AI product guidance see a 2% revenue lift. The AI handles sizing, customization, compatibility, and care questions using the brand's own product data and policies.
+
+The conversion gap isn't a traffic problem. It's an availability problem.
+
+The traffic is already there. The conversation wasn't.`,
             comment: "None."
           }
         }
@@ -1064,6 +1125,24 @@ That's the shift. Not fewer people. Better allocation.
 
 Link in the first comment.`,
             comment: "Full case study on how this apparel brand reached 60% autonomous resolution: https://gorgias.com/case-studies/apparel"
+          },
+          "Brand": {
+            body: `9,000 tickets a month. 35% from sizing questions alone.
+
+Every product drop multiplied this apparel brand's pre-sale inquiry volume. Hiring couldn't keep pace. Training took weeks per agent.
+
+They deployed an AI agent trained on their size charts, product specs, fit notes, and return policies.
+
+90 days later: 60% autonomous resolution.
+
+The AI handles sizing, WISMO, returns eligibility, and fabric inquiries without human involvement. Escalation rate: 0.3%.
+
+The team shifted from answering the same sizing question 400 times a week to handling complex exchanges, VIP customers, and edge cases that require judgment.
+
+Product drops went from a staffing crisis to a normal week.
+
+Full case study in the comments.`,
+            comment: "See how this apparel brand went from 9K monthly tickets to 60% autonomous resolution in 90 days: https://gorgias.com/case-studies/apparel"
           }
         }
       },
@@ -1125,6 +1204,19 @@ Poll:
 - Tech sprawl across too many tools
 - Proving CX ROI to the exec team
 - Other (tell me in the comments)`,
+            comment: "None."
+          },
+          "Brand": {
+            body: `We talk to CX leaders every day. Four bottlenecks keep coming up.
+
+Which one hits hardest for your team right now?
+
+Poll:
+- Ticket volume outpacing headcount
+- Agent burnout and turnover
+- Too many tools, not enough integration
+- Proving CX ROI to leadership
+- Other (tell us in the comments)`,
             comment: "None."
           }
         }
@@ -1190,6 +1282,22 @@ The medium-complexity tickets -- returns with conditions, subscription changes, 
 Curious about your experience:
 
 What did you automate first? And if you could go back, would you make the same call?`,
+            comment: "None."
+          },
+          "Brand": {
+            body: `When ecommerce brands automate support, they almost always start with WISMO.
+
+It makes sense. Highest volume. Lowest complexity. Fast win.
+
+But we see something interesting in the data. The highest cost-per-resolution tickets aren't the simple ones. They're the medium-complexity tickets that require 3-4 messages before resolution.
+
+Returns with conditions. Subscription modifications. Partial refunds.
+
+These eat more agent time per ticket and are often more automatable than teams assume -- with the right business rules in place.
+
+Starting with WISMO is logical. It might not be where the biggest ROI sits.
+
+What did your team automate first? Would you make the same call today?`,
             comment: "None."
           }
         }
@@ -1266,6 +1374,22 @@ Support should report to the CFO. Not because it's a finance function. Because t
 
 Fight me in the comments.`,
             comment: "None."
+          },
+          "Brand": {
+            body: `Support-influenced revenue averages 15% of total revenue across ecommerce brands on our platform.
+
+Pre-sale conversions. Retention saves. Upsell assists. Churn prevention.
+
+Yet support still reports to operations in most organizations. It gets measured on cost. Headcount. Handle time.
+
+When support reports to finance, two things change. The team measures what the CFO cares about: revenue impact, cost-per-resolution, LTV influence. And the CFO sees support as a revenue function, not an expense line.
+
+The reporting line shapes how the entire company values CX.
+
+Same team. Same work. Different lens. Completely different investment decisions.
+
+Where does CX sit in your org chart?`,
+            comment: "None."
           }
         }
       },
@@ -1340,6 +1464,26 @@ That's a 40x difference. Same AI. Different instructions.
 The model is the easy part. The rules are the hard part. That's where most teams need to focus.
 
 What's been your experience deploying AI in CX?`,
+            comment: "None."
+          },
+          "Brand": {
+            body: `We see this pattern repeatedly.
+
+A brand deploys an AI agent, points it at their knowledge base, and expects it to handle tickets. It hallucinates. It gives vague answers. It escalates too often.
+
+The conclusion: "AI isn't ready."
+
+The AI is fine. The Guidance layer is missing.
+
+Guidance is the set of business rules that tells AI what to do, when to do it, and when to stop. Refund thresholds. Return eligibility. Escalation triggers. Brand tone.
+
+Without Guidance, AI is a language model guessing. With Guidance, AI acts like a trained senior agent who knows the policies.
+
+Brands with a defined Guidance layer see 0.3% escalation rates. The industry average: 12%.
+
+Same AI. Different instructions. 40x difference in outcomes.
+
+The model is the easy part. The rules are where to focus.`,
             comment: "None."
           }
         }
@@ -1467,11 +1611,28 @@ What's been your experience deploying AI in CX?`,
       }
     }
 
-    function getBestTimeHTML(persona, dateStr) {
-      const bt = bestTimes[persona];
-      if (!bt) return "";
+    function getBestTimeHTML(persona, dateStr, tone) {
       const d = new Date(dateStr + "T12:00:00");
       const dayOfWeek = d.getDay();
+
+      if (tone === "Brand") {
+        const bestDays = [2, 3, 4]; // Tue, Wed, Thu
+        const isAligned = bestDays.includes(dayOfWeek);
+        if (isAligned) {
+          return `<div class="time-rec">
+            <span class="tr-label">Company page:</span>
+            Tuesday, Wednesday, or Thursday, 10:00 AM - 12:00 PM -- Peak engagement for company page posts
+          </div>`;
+        } else {
+          return `<div class="time-rec misaligned">
+            <span class="tr-label">Company page tip:</span>
+            ${weekdays[dayOfWeek]} is not ideal for company pages. Tuesday, Wednesday, or Thursday at 10:00 AM - 12:00 PM typically drives higher reach
+          </div>`;
+        }
+      }
+
+      const bt = bestTimes[persona];
+      if (!bt) return "";
       const recDays = bt.days.map(n => weekdays[n]);
       const isAligned = bt.days.includes(dayOfWeek);
 
@@ -1585,7 +1746,7 @@ What's been your experience deploying AI in CX?`,
               <div class="persona-guidance ${showGuidance ? 'visible' : ''}" id="pg-${gi}">
                 <span class="pg-label">Persona shift:</span> ${esc(guidance)}
               </div>
-              ${getBestTimeHTML(sel.persona, sel.date)}
+              ${getBestTimeHTML(sel.persona, sel.date, sel.tone)}
               <div class="draft-content active">
                 <div class="linkedin-preview">
                   <button class="copy-btn" onclick="copyDraft(event, ${gi})">Copy</button>
